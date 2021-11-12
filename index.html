@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2021善行班音檔</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/bootstrap.darkly.min.css">
+    <script src="./js/jquery-3.2.1.min.js" ></script>
+    <script src="./js/popper.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+    <style>
+        /*
+        ::::::::::::::::::::::::::::::::::::::::::::::::::::
+        Bootstrap 4 breakpoints
+        */
+        /* Small devices (landscape phones, 544px and up) */
+        @media (min-width: 544px) {  
+        h1 {font-size:1.5rem;} /*1rem = 16px*/
+        }
+        
+        /* Medium devices (tablets, 768px and up) The navbar toggle appears at this breakpoint */
+        @media (min-width: 768px) {  
+        h1 {font-size:2rem;} /*1rem = 16px*/
+        }
+        
+        /* Large devices (desktops, 992px and up) */
+        @media (min-width: 992px) { 
+        h1 {font-size:2.5rem;} /*1rem = 16px*/
+        }
+        
+        /* Extra large devices (large desktops, 1200px and up) */
+        @media (min-width: 1200px) {  
+        h1 {font-size:3rem;} /*1rem = 16px*/    
+        }
+    </style>
+
+</head>
+<body>
+
+    <div style="height: 3rem;">
+        &nbsp;
+    </div>
+
+
+
+    <div class="container">
+        <div class="row">
+            <div id="audioDiv" class="col col-12 col-lg-4">
+                <!--
+                <audio controls="false" class="audio" id="audioSource">
+                    <source id="mp3Source" src="#" type="audio/mpeg" />
+                </audio>
+                -->
+            </div>
+            <div class="col col-12 col-lg-4">
+                <button id="btn2" class="btn btn-dark" type="button"
+                    onclick='setTime(document.getElementById("time11").value,document.getElementById("time12").value);'>
+                    <span class="ui-button-text">
+                        設定
+                    </span>
+                </button>
+                <div class="form-group">
+                    <label>開始時間:</label>
+                    <table>
+                        <tr>
+                            <td><input type="number" class="form-control" id="time11" value="00" min="0" max="59"></td>
+                            <td>分:</td>
+                            <td><input type="number" class="form-control" id="time12" value="01" min="0" max="59"></td>
+                            <td>秒</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="lyricDiv" class="col col-12 h3">
+                字幕尚未載入
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        /*
+        https://shunnien.github.io/2017/07/03/Get-Query-String-Parameters-with-JavaScript/
+        */
+        var getUrlParameter=function(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            let regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            let results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        };
+
+        /*
+        https://shunnien.github.io/2017/07/03/Get-Query-String-Parameters-with-JavaScript/
+        */
+        var queryString =function()
+        {
+            // This function is anonymous, is executed immediately and
+            // the return value is assigned to QueryString!
+            let query_string = {};
+            var query = window.location.search.substring(1);
+            let vars = query.split("&");
+            for (var i = 0; i < vars.length; i++)
+            {
+                var pair = vars[i].split("=");
+                // If first entry with this name
+                if (typeof query_string[pair[0]] === "undefined")
+                {
+                    query_string[pair[0]] = pair[1];
+                    // If second entry with this name
+                } else if (typeof query_string[pair[0]] === "string")
+                {
+                    var arr = [query_string[pair[0]], pair[1]];
+                    query_string[pair[0]] = arr;
+                    // If third or later entry with this name
+                } else
+                {
+                    query_string[pair[0]].push(pair[1]);
+                }
+            }
+            return query_string;
+        };
+
+        var SetAudioSource=function (audioSource,jsonTxtFileName) {
+            //var source = document.getElementById('audioSource');
+            //var mp3Source = document.getElementById('mp3Source');
+
+            let $audio=$("<audio />").attr({"controls":"false"
+                                           ,"class":"audio"
+                                           ,"id":"audioSource"});
+            let $source=$("<source />").attr({"id":"mp3Source"
+                                             ,"type":"audio/mpeg"
+                                             ,"src":audioSource})
+                                       .appendTo($audio);
+            $("#audioDiv").empty()
+            $audio.appendTo("#audioDiv");
+
+            //mp3Source.src = audioSource;
+            let source = document.getElementById('audioSource');
+            source.load(); //call this to just preload the audio without playing
+            //source.play(); //call this to play the song right away
+
+            let mp3Source = document.getElementById('mp3Source');
+
+            listenTimeChange(jsonTxtFileName,source);
+
+        };
+
+        var GetAudioSourceJson=function(mp3Name){
+            let url = "./json/audioSource.json";
+            
+            if(mp3Name){
+                $.getJSON({
+                    url: url
+                }).then(function(data){
+                    let mp3FileUrl = data[mp3Name.toUpperCase()];
+
+                    if(mp3FileUrl){
+                        SetAudioSource(mp3FileUrl,"./json/"+mp3Name+".json");
+                    }
+
+                }).fail(function(err0,err1){
+                    console.error("GetAudioSourceJson error!");
+                    console.error(err0);
+                    console.error(err1);
+
+                });
+            }else{
+                console.error("參數未包含mp3檔名!!");
+            }
+        };
+
+        var setTime = function(minutes, seconds) {
+            var vid = document.getElementById("audioSource");
+            vid.currentTime = parseInt(minutes) * 60 + parseInt(seconds);
+
+        };
+
+        var listenTimeChange = function(jsonFile,vid){
+            // Get the video element with id="myVideo"
+            let fileName = jsonFile.toLowerCase();
+        
+            $.getJSON({
+                url:fileName,
+                success:function(data){
+                    
+                    let timeStamp = [];
+                    let text = [];
+
+                    $.each(data, function(k, v) {
+                        /// do stuff
+                        timeStamp.push(k);
+                        text.push(v);
+                    });
+                    
+                    let spanCurrentTime = "0";
+                    
+                    //let vid = document.getElementById("mp3Source");
+                    //console.log(vid);
+                    // Attach a timeupdate event to the video element, and execute a function if the current playback position has changed
+                    /* 第一件事 上字幕 */
+                    vid.addEventListener("timeupdate", function(){
+                        
+                        let filterTimeData = timeStamp.filter(function(item){
+                            return item < vid.currentTime;
+                        });
+
+                        if(filterTimeData.length){
+                            let idx = filterTimeData.length - 1;
+                            let sameTimeString = spanCurrentTime.localeCompare(timeStamp[idx]);
+                            
+                            if(sameTimeString){
+                                spanCurrentTime = timeStamp[idx];
+                                $("#lyricDiv").text(text[idx])
+                            }
+                        }
+
+                    });
+
+                    /*第二件事 自動暫停播放*/
+                    vid.addEventListener("timeupdate", function(){
+                        let parameters = queryString();
+                        let breakTime = parameters["breakTime"];
+                        if(breakTime){
+                            let reMinute = /\d?\dm/i;
+                            let reSecond = /\d?\ds/i;
+                            let minute = breakTime.match(reMinute);
+                            let second = breakTime.match(reSecond);
+                            totalSecond = 9999;
+
+                            if(minute[0] && second[0]){
+                                totalSecond = parseInt(minute[0].replace('m',''))*60 + parseInt(second[0].replace('s','')) ;
+                            }
+
+                            if(vid.currentTime > totalSecond){
+                                vid.pause();
+                            }
+
+                        }
+                    });
+                }
+            });
+        };
+
+        var SetBgnTime=function(){
+            setTimeout(function(){
+                let parameters = queryString();
+                let bgnTime = parameters["bgnTime"];
+                if(bgnTime){
+                    let reMinute = /\d?\dm/i;
+                    let reSecond = /\d?\ds/i;
+                    let minute = bgnTime.match(reMinute);
+                    let second = bgnTime.match(reSecond);
+
+                    if(minute[0] && second[0]){
+                        $("#time11").val(minute[0].replace('m',''));
+                        $("#time12").val(second[0].replace('s',''));
+                    }
+                }
+            },0);
+        };
+
+        $(document).ready(function(){
+
+            let parameters = queryString();
+            let mp3Name = parameters["mp3Name"];
+            let bgnTime = parameters["bgnTime"];
+            let breakTime = parameters["breakTime"];
+
+            GetAudioSourceJson(mp3Name);
+            SetBgnTime();
+        });
+    </script>
+    
+</body>
+</html>
